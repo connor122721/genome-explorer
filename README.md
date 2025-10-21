@@ -18,7 +18,7 @@ The first species is *Daphnia pulex* (the organism I did my PhD on)
 - Responsive design with animations
 
 ## Live Demo
-[View the app here](https://YOUR-USERNAME.github.io/genome-explorer/)
+[View the app here](https://connor122721.github.io/genome-explorer/)
 
 ## Why I built this
 I wanted to learn basic web development and thought a genome explorer would be a fun way to combine coding with my research interests. Plus, I've always wanted to highlight how many cool organisms have sequenced genomes now!
@@ -30,5 +30,5 @@ Just plain HTML, CSS, and JavaScript - keeping it simple for my first project.
 Humans, fruit flies, water fleas, tardigrades, spotted lanternflies, barnacles, octopuses, and more!
 
 ---
-
-Built with help from Claude. Feedback welcome!
+Built with help from Claude and various HTML websites. Any feedback welcome!
+Email: connor.murray.phd@gmail.com
