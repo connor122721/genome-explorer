@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random NCBI Genome Species Explorer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 1000px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .species-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            padding: 30px;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .phylogeny-card {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border-radius: 15px;
+            padding: 20px;
+            animation: slideIn 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .phylogeny-card::before {
+            content: '🌳';
+            position: absolute;
+            font-size: 150px;
+            opacity: 0.1;
+            right: -20px;
+            bottom: -20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .phylogeny-title {
+            font-weight: bold;
+            color: #2e7d32;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 1em;
+        }
+
+        .tree-container {
+            font-family: 'Courier New', monospace;
+            font-size: 0.7em;
+            color: #1b5e20;
+            line-height: 1.8;
+            white-space: pre;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tree-highlight {
+            background: linear-gradient(90deg, #ffeb3b 0%, #fdd835 100%);
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+            50% { box-shadow: 0 2px 8px rgba(255,235,59,0.5); }
+        }
+
+        .species-name {
+            font-size: 1.8em;
+            color: #2d3748;
+            margin-bottom: 5px;
+            font-style: italic;
+            text-align: center;
+        }
+
+        .common-name {
+            font-size: 1.2em;
+            color: #4a5568;
+            margin-bottom: 15px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .category {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .center-badges {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .special-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            margin-left: 10px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+
+        .genome-stats {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .stat-item {
+            font-size: 0.85em;
+        }
+
+        .stat-label {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .stat-value {
+            color: #4a5568;
+        }
+
+        .fun-fact {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            color: #4a5568;
+            line-height: 1.6;
+            text-align: left;
+        }
+
+        .fun-fact-title {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border-radius: 50px;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 600;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .ncbi-link {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .ncbi-link:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value-counter {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label-counter {
+            font-size: 0.85em;
+            color: #718096;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .species-name {
+                font-size: 1.4em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧬 Genome Explorer</h1>
+        <p class="subtitle">Discover fascinating species with sequenced genomes</p>
+        
+        <div class="main-content">
+            <div class="species-card" id="speciesCard">
+                <div class="center-badges">
+                    <span class="category" id="category"></span>
+                    <span id="specialBadge"></span>
+                </div>
+                
+                <div class="species-name" id="speciesName">Click below to discover a species!</div>
+                <div class="common-name" id="commonName"></div>
+                
+                <div class="genome-stats" id="genomeStats" style="display: none;">
+                    <div class="stat-item">
+                        <div class="stat-label">Assembly:</div>
+                        <div class="stat-value" id="assembly">-</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Genome Size:</div>
+                        <div class="stat-value" id="genomeSize">-</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Contig N50:</div>
+                        <div class="stat-value" id="n50">-</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Technology:</div>
+                        <div class="stat-value" id="technology">-</div>
+                    </div>
+                </div>
+                
+                <div class="fun-fact" id="funFact" style="display: none;">
+                    <div class="fun-fact-title">Did you know?</div>
+                    <div id="factText"></div>
+                </div>
+                <a href="#" id="ncbiLink" class="ncbi-link" style="display: none;" target="_blank">
+                    View Genome on NCBI →
+                </a>
+            </div>
+
+            <div class="phylogeny-card" id="phylogenyCard" style="display: none;">
+                <div class="phylogeny-title">🌳 Tree of Life</div>
+                <div class="tree-container" id="phylogenyTree"></div>
+            </div>
+        </div>
+
+        <button onclick="generateRandomSpecies()">Explore Random Species</button>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value-counter" id="counter">0</div>
+                <div class="stat-label-counter">Species Explored</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let counter = 0;
+        let isFirstClick = true;
+        let shownSpecies = new Set();
+
+        const species = [
+            {
+                scientific: "Daphnia pulex",
+                common: "Water Flea",
+                category: "Crustacean",
+                phylum: "Arthropoda",
+                fact: "Daphnia pulex has one of the highest gene counts of any animal sequenced - about 31,000 genes, more than humans! They can reproduce both sexually and asexually, and their genome reveals extensive gene duplication events that help them adapt rapidly to changing environments.",
+                accession: "GCF_021134715.1",
+                genomeSize: 133.2,
+                n50: 12.3,
+                technology: "Illumina",
+                special: "PhD Organism! 🎓"
+            },
+            {
+                scientific: "Homo sapiens",
+                common: "Human",
+                category: "Mammal",
+                phylum: "Chordata",
+                fact: "The human genome contains approximately 3 billion base pairs and about 20,000-25,000 protein-coding genes. Surprisingly, only about 1.5% of the genome codes for proteins, while much of the rest is involved in gene regulation.",
+                accession: "GCF_000001405.40",
+                genomeSize: 3099.7,
+                n50: 66.2,
+                technology: "Multiple (Sanger, Illumina, PacBio)"
+            },
+            {
+                scientific: "Lycorma delicatula",
+                common: "Spotted Lanternfly",
+                category: "Invasive Insect",
+                phylum: "Arthropoda",
+                fact: "This invasive pest from Asia has spread across the eastern United States, causing millions in agricultural damage. Its genome was recently sequenced to help develop control strategies and understand its rapid spread and host plant preferences.",
+                accession: "GCA_014843695.1",
+                genomeSize: 2372.0,
+                n50: 1.29,
+                technology: "Illumina",
+                special: "Invasive! 🚨"
+            },
+            {
+                scientific: "Amphibalanus amphitrite",
+                common: "Acorn Barnacle",
+                category: "Crustacean",
+                phylum: "Arthropoda",
+                fact: "Despite being permanently attached as adults, barnacles are crustaceans related to crabs and shrimp! Their genome reveals the genetic basis for their incredibly strong underwater adhesive, which scientists study to develop medical adhesives and anti-fouling coatings.",
+                accession: "GCA_000328365.1",
+                genomeSize: 686.0,
+                n50: 0.28,
+                technology: "Illumina"
+            },
+            {
+                scientific: "Hypsibius exemplaris",
+                common: "Water Bear / Tardigrade",
+                category: "Microscopic Animal",
+                phylum: "Tardigrada",
+                fact: "Tardigrades can survive extreme conditions including the vacuum of space, radiation, and temperatures from near absolute zero to 300°F. Their genome contains genes acquired from bacteria and other organisms, which may help explain their extraordinary survival abilities.",
+                accession: "GCA_002082055.1",
+                genomeSize: 134.5,
+                n50: 0.81,
+                technology: "Illumina"
+            },
+            {
+                scientific: "Halyomorpha halys",
+                common: "Brown Marmorated Stink Bug",
+                category: "Invasive Insect",
+                phylum: "Arthropoda",
+                fact: "Native to East Asia, this agricultural pest has invaded North America and Europe. Its genome helps researchers understand its broad host range (over 300 plant species), cold tolerance, and potential biological control methods.",
+                accession: "GCF_000696795.3",
+                genomeSize: 1149.0,
+                n50: 3.97,
+                technology: "Illumina",
+                special: "Invasive! 🚨"
+            },
+            {
+                scientific: "Prochlorococcus marinus",
+                common: "Prochlorococcus",
+                category: "Cyanobacterium",
+                phylum: "Cyanobacteria",
+                fact: "The most abundant photosynthetic organism on Earth! Despite being microscopic, Prochlorococcus produces an estimated 20% of the oxygen in our atmosphere. Its tiny genome (only 1.7 million base pairs) is optimized for efficiency in ocean environments.",
+                accession: "GCF_000007925.1",
+                genomeSize: 1.66,
+                n50: 1.66,
+                technology: "Sanger"
+            },
+            {
+                scientific: "Escherichia coli",
+                common: "E. coli",
+                category: "Bacterium",
+                phylum: "Proteobacteria",
+                fact: "E. coli is one of the most studied organisms in biology. While most strains are harmless gut bacteria, some can cause serious illness. Its genome has been completely mapped and it's a workhorse of genetic engineering and biotechnology.",
+                accession: "GCF_000005845.2",
+                genomeSize: 4.64,
+                n50: 4.64,
+                technology: "Sanger"
+            },
+            {
+                scientific: "Turritopsis dohrnii",
+                common: "Immortal Jellyfish",
+                category: "Cnidarian",
+                phylum: "Cnidaria",
+                fact: "This jellyfish can theoretically live forever by reverting to its juvenile polyp stage after reaching maturity - a process called transdifferentiation. Scientists study its genome to understand aging and cellular reprogramming.",
+                accession: "GCA_028539605.1",
+                genomeSize: 434.0,
+                n50: 0.65,
+                technology: "Illumina"
+            },
+            {
+                scientific: "Oncorhynchus mykiss",
+                common: "Rainbow Trout",
+                category: "Fish",
+                phylum: "Chordata",
+                fact: "Rainbow trout have been introduced worldwide for sport fishing, making them one of the most widespread fish species. Their genome underwent a whole-genome duplication event, providing extra genetic material for adaptation and evolution.",
+                accession: "GCF_013265735.2",
+                genomeSize: 2197.0,
+                n50: 27.5,
+                technology: "PacBio"
+            },
+            {
+                scientific: "Saccharomyces cerevisiae",
+                common: "Baker's Yeast",
+                category: "Fungus",
+                phylum: "Ascomycota",
+                fact: "This yeast has been essential to baking and brewing for millennia. It was the first eukaryotic genome fully sequenced (1996). About 23% of its genes have human counterparts, making it crucial for studying basic cellular processes.",
+                accession: "GCF_000146045.2",
+                genomeSize: 12.2,
+                n50: 0.92,
+                technology: "Sanger"
+            },
+            {
+                scientific: "Octopus bimaculoides",
+                common: "California Two-Spot Octopus",
+                category: "Mollusk",
+                phylum: "Mollusca",
+                fact: "Octopuses have large, complex brains and amazing problem-solving abilities. Their genome reveals massive expansion of gene families involved in neural development, explaining their incredible intelligence despite diverging from vertebrates 500 million years ago.",
+                accession: "GCF_001194135.2",
+                genomeSize: 2337.0,
+                n50: 1.47,
+                technology: "Illumina"
+            },
+            {
+                scientific: "Caenorhabditis elegans",
+                common: "Roundworm",
+                category: "Nematode",
+                phylum: "Nematoda",
+                fact: "This tiny transparent worm was the first multicellular organism with a completely sequenced genome. It has exactly 959 cells as an adult, and every cell division has been mapped, making it invaluable for developmental biology research.",
+                accession: "GCF_000002985.6",
+                genomeSize: 100.3,
+                n50: 17.5,
+                technology: "Sanger"
+            },
+            {
+                scientific: "Drosophila melanogaster",
+                common: "Fruit Fly",
+                category: "Insect",
+                phylum: "Arthropoda",
+                fact: "Despite being separated by 800 million years of evolution, fruit flies share about 75% of human disease genes. They've been used in genetics research for over 100 years, leading to fundamental discoveries about inheritance and development.",
+                accession: "GCF_000001215.4",
+                genomeSize: 143.7,
+                n50: 25.3,
+                technology: "Sanger"
+            },
+            {
+                scientific: "Danio rerio",
+                common: "Zebrafish",
+                category: "Fish",
+                phylum: "Chordata",
+                fact: "Zebrafish embryos are transparent, allowing scientists to watch organs develop in real-time. They can regenerate their hearts, fins, and even parts of their brain, making them crucial for regenerative medicine research.",
+                accession: "GCF_000002035.6",
+                genomeSize: 1373.5,
+                n50: 1.46,
+                technology: "Sanger"
+            },
+            {
+                scientific: "Arabidopsis thaliana",
+                common: "Thale Cress",
+                category: "Plant",
+                phylum: "Streptophyta",
+                fact: "This small weed was the first plant genome sequenced. Despite its tiny size, it has about 27,000 genes - more than humans! It's the model organism for plant biology, helping us understand everything from flowering to stress responses.",
+                accession: "GCF_000001735.4",
+                genomeSize: 119.7,
+                n50: 23.5,
+                technology: "Sanger"
+            },
+            {
+                scientific: "Pan troglodytes",
+                common: "Chimpanzee",
+                category: "Mammal",
+                phylum: "Chordata",
+                fact: "Chimpanzees share 98.8% of their DNA with humans, yet key differences in gene regulation and expression lead to significant biological distinctions. Studying their genome helps us understand what makes us uniquely human.",
+                accession: "GCF_002880755.1",
+                genomeSize: 3096.6,
+                n50: 133.0,
+                technology: "Sanger, Illumina, PacBio"
+            },
+            {
+                scientific: "Mytilus galloprovincialis",
+                common: "Mediterranean Mussel",
+                category: "Mollusk",
+                phylum: "Mollusca",
+                fact: "Mussels produce incredibly strong adhesive proteins that work underwater - something human-made glues struggle with. Scientists study mussel genomes to develop medical adhesives for surgery and dental applications.",
+                accession: "GCA_900618805.1",
+                genomeSize: 1598.0,
+                n50: 0.75,
+                technology: "Illumina"
+            },
+            {
+                scientific: "Dreissena polymorpha",
+                common: "Zebra Mussel",
+                category: "Invasive Mollusk",
+                phylum: "Mollusca",
+                fact: "Native to Eurasia, zebra mussels have devastated North American waterways since the 1980s. They can completely cover underwater surfaces and clog water intake pipes. Their genome helps researchers understand their invasive success and develop control methods.",
+                accession: "GCA_002080195.1",
+                genomeSize: 1622.0,
+                n50: 0.46,
+                technology: "Illumina",
+                special: "Invasive! 🚨"
+            },
+            {
+                scientific: "Apis mellifera",
+                common: "Honey Bee",
+                category: "Insect",
+                phylum: "Arthropoda",
+                fact: "Honey bees have extraordinary social organization encoded in their genome. They have more genes for smell receptors than fruit flies, helping them locate flowers. Their 'waggle dance' communication system is partially genetically determined.",
+                accession: "GCF_003254395.2",
+                genomeSize: 225.0,
+                n50: 5.4,
+                technology: "Sanger, Illumina"
+            },
+            {
+                scientific: "Myotis lucifugus",
+                common: "Little Brown Bat",
+                category: "Mammal",
+                phylum: "Chordata",
+                fact: "Bats are the only mammals capable of true flight. Their genomes reveal adaptations for echolocation, flight, and immunity to viruses that would be deadly to other mammals. They can eat half their body weight in insects each night!",
+                accession: "GCF_000147115.1",
+                genomeSize: 1981.0,
+                n50: 4.19,
+                technology: "Sanger"
+            },
+            {
+                scientific: "Strongylocentrotus purpuratus",
+                common: "Purple Sea Urchin",
+                category: "Echinoderm",
+                phylum: "Echinodermata",
+                fact: "Sea urchins have an unexpectedly complex immune system with hundreds of genes similar to those in vertebrates. Their genome helped reveal that we share a common ancestor about 540 million years ago.",
+                accession: "GCF_000002235.5",
+                genomeSize: 814.0,
+                n50: 1.58,
+                technology: "Sanger"
+            },
+            {
+                scientific: "Ciona intestinalis",
+                common: "Sea Squirt",
+                category: "Tunicate",
+                phylum: "Chordata",
+                fact: "As larvae, sea squirts have a notochord (primitive backbone), making them our distant cousins! Adults lose their brain and become stationary filter feeders. Their compact genome helps us understand vertebrate evolution.",
+                accession: "GCF_000224145.3",
+                genomeSize: 115.3,
+                n50: 7.6,
+                technology: "Sanger"
+            },
+            {
+                scientific: "Hydra vulgaris",
+                common: "Hydra",
+                category: "Cnidarian",
+                phylum: "Cnidaria",
+                fact: "Hydras don't appear to age and can regenerate their entire body from a small piece. Their genome contains genes involved in stem cell regulation that may hold clues to understanding aging in other organisms.",
+                accession: "GCA_000004095.1",
+                genomeSize: 1007.0,
+                n50: 0.38,
+                technology: "Sanger"
+            },
+            {
+                scientific: "Nematostella vectensis",
+                common: "Starlet Sea Anemone",
+                category: "Cnidarian",
+                phylum: "Cnidaria",
+                fact: "This tiny sea anemone has a surprisingly complex genome that revealed cnidarians share many gene families with humans, including genes for neural development, despite their simple body plan and ancient evolutionary split.",
+                accession: "GCF_000209225.1",
+                genomeSize: 356.0,
+                n50: 1.03,
+                technology: "Sanger"
+            },
+            {
+                scientific: "Trichoplax adhaerens",
+                common: "Placozoan",
+                category: "Placozoan",
+                phylum: "Placozoa",
+                fact: "One of the simplest animals known, with no organs, no symmetry, and only six cell types. Yet its genome contains surprisingly complex gene families, challenging our understanding of animal evolution and complexity.",
+                accession: "GCF_000150275.1",
+                genomeSize: 98.0,
+                n50: 4.56,
+                technology: "Sanger"
+            },
+            {
+                scientific: "Botryllus schlosseri",
+                common: "Golden Star Tunicate",
+                category: "Tunicate",
+                phylum: "Chordata",
+                fact: "These colonial sea squirts can fuse with genetically compatible neighbors and reject incompatible ones - similar to tissue transplant rejection in humans. They undergo whole-body regeneration weekly, replacing all their organs!",
+                accession: "GCA_002443545.2",
+                genomeSize: 575.0,
+                n50: 0.79,
+                technology: "Illumina"
+            },
+            {
+                scientific: "Mnemiopsis leidyi",
+                common: "Comb Jelly",
+                category: "Ctenophore",
+                phylum: "Ctenophora",
+                fact: "Comb jellies may have evolved neurons independently from other animals! Their genome suggests they diverged from other animals very early, possibly before the evolution of true nervous systems, challenging our understanding of brain evolution.",
+                accession: "GCA_000226015.1",
+                genomeSize: 156.0,
+                n50: 0.18,
+                technology: "Sanger, 454"
+            },
+            {
+                scientific: "Lytechinus variegatus",
+                common: "Green Sea Urchin",
+                category: "Echinoderm",
+                phylum: "Echinodermata",
+                fact: "Sea urchins have five-sided radial symmetry as adults but are bilaterally symmetric as larvae. Their genome reveals they use many of the same genes for development as humans, despite looking nothing like us!",
+                accession: "GCF_018143015.1",
+                genomeSize: 972.0,
+                n50: 10.4,
+                technology: "PacBio, Illumina"
+            },
+            {
+                scientific: "Branchiostoma floridae",
+                common: "Florida Lancelet",
+                category: "Cephalochordate",
+                phylum: "Chordata",
+                fact: "Lancelets are the closest living relatives to vertebrates that aren't vertebrates themselves. They look like small, translucent fish and their genome helps us understand the origin of vertebrate features like the backbone.",
+                accession: "GCF_000003815.2",
+                genomeSize: 496.0,
+                n50: 1.68,
+                technology: "Sanger"
+            }
+        ];
+
+        const phylogenyTrees = {
+            "Chordata": `Life
+├─ Bacteria
+├─ Archaea
+└─ Eukarya
+   ├─ Plants
+   ├─ Fungi
+   └─ Animals
+      ├─ Porifera
+      ├─ Cnidaria
+      ├─ Placozoa
+      ├─ Ctenophora
+      └─ Bilateria
+         ├─ Protostomes
+         └─ Deuterostomes
+            ├─ Echinodermata
+            ├─ Hemichordata
+            └─ <span class="tree-highlight">Chordata ⭐</span>`,
+            
+            "Arthropoda": `Life
+├─ Bacteria
+├─ Archaea
+└─ Eukarya
+   ├─ Plants
+   ├─ Fungi
+   └─ Animals
+      └─ Bilateria
+         ├─ Deuterostomes
+         └─ Protostomes
+            ├─ Lophotrochozoa
+            └─ Ecdysozoa
+               ├─ Nematoda
+               ├─ Tardigrada
+               └─ <span class="tree-highlight">Arthropoda ⭐</span>`,
+            
+            "Mollusca": `Life
+├─ Bacteria
+├─ Archaea
+└─ Eukarya
+   ├─ Plants
+   ├─ Fungi
+   └─ Animals
+      └─ Bilateria
+         ├─ Deuterostomes
+         └─ Protostomes
+            ├─ Ecdysozoa
+            └─ Lophotrochozoa
+               ├─ Annelida
+               ├─ Brachiopoda
+               └─ <span class="tree-highlight">Mollusca ⭐</span>`,
+            
+            "Nematoda": `Life
+├─ Bacteria
+├─ Archaea
+└─ Eukarya
+   ├─ Plants
+   ├─ Fungi
+   └─ Animals
+      └─ Bilateria
+         ├─ Deuterostomes
+         └─ Protostomes
+            ├─ Lophotrochozoa
+            └─ Ecdysozoa
+               ├─ Tardigrada
+               ├─ Arthropoda
+               └─ <span class="tree-highlight">Nematoda ⭐</span>`,
+            
+            "Cnidaria": `Life
+├─ Bacteria
+├─ Archaea
+└─ Eukarya
+   ├─ Plants
+   ├─ Fungi
+   └─ Animals
+      ├─ Porifera
+      ├─ Ctenophora
+      ├─ Placozoa
+      ├─ <span class="tree-highlight">Cnidaria ⭐</span>
+      └─ Bilateria
+         ├─ Protostomes
+         └─ Deuterostomes`,
+            
+            "Echinodermata": `Life
+├─ Bacteria
+├─ Archaea
+└─ Eukarya
+   ├─ Plants
+   ├─ Fungi
+   └─ Animals
+      └─ Bilateria
+         ├─ Protostomes
+         └─ Deuterostomes
+            ├─ Hemichordata
+            ├─ Chordata
+            └─ <span class="tree-highlight">Echinodermata ⭐</span>`,
+            
+            "Tardigrada": `Life
+├─ Bacteria
+├─ Archaea
+└─ Eukarya
+   ├─ Plants
+   ├─ Fungi
+   └─ Animals
+      └─ Bilateria
+         ├─ Deuterostomes
+         └─ Protostomes
+            ├─ Lophotrochozoa
+            └─ Ecdysozoa
+               ├─ Nematoda
+               ├─ Arthropoda
+               └─ <span class="tree-highlight">Tardigrada ⭐</span>`,
+            
+            "Ctenophora": `Life
+├─ Bacteria
+├─ Archaea
+└─ Eukarya
+   ├─ Plants
+   ├─ Fungi
+   └─ Animals
+      ├─ Porifera
+      ├─ Placozoa
+      ├─ <span class="tree-highlight">Ctenophora ⭐</span>
+      ├─ Cnidaria
+      └─ Bilateria`,
+            
+            "Placozoa": `Life
+├─ Bacteria
+├─ Archaea
+└─ Eukarya
+   ├─ Plants
+   ├─ Fungi
+   └─ Animals
+      ├─ Porifera
+      ├─ <span class="tree-highlight">Placozoa ⭐</span>
+      ├─ Ctenophora
+      ├─ Cnidaria
+      └─ Bilateria`,
+            
+            "Ascomycota": `Life
+├─ Bacteria
+├─ Archaea
+└─ Eukarya
+   ├─ Animals
+   ├─ Plants
+   └─ Fungi
+      ├─ Basidiomycota
+      ├─ Chytridiomycota
+      ├─ Glomeromycota
+      └─ <span class="tree-highlight">Ascomycota ⭐</span>`,
+            
+            "Streptophyta": `Life
+├─ Bacteria
+├─ Archaea
+└─ Eukarya
+   ├─ Animals
+   ├─ Fungi
+   └─ Plants
+      ├─ Chlorophyta
+      └─ <span class="tree-highlight">Streptophyta ⭐</span>
+         ├─ Bryophytes
+         └─ Vascular Plants`,
+            
+            "Cyanobacteria": `Life
+├─ Archaea
+├─ Eukarya
+└─ Bacteria
+   ├─ Proteobacteria
+   ├─ Firmicutes
+   ├─ Actinobacteria
+   ├─ Bacteroidetes
+   └─ <span class="tree-highlight">Cyanobacteria ⭐</span>`,
+            
+            "Proteobacteria": `Life
+├─ Archaea
+├─ Eukarya
+└─ Bacteria
+   ├─ Firmicutes
+   ├─ Actinobacteria
+   ├─ Bacteroidetes
+   ├─ Cyanobacteria
+   └─ <span class="tree-highlight">Proteobacteria ⭐</span>`
+        };
+
+        function generateRandomSpecies() {
+            let selected;
+            
+            if (isFirstClick) {
+                selected = species[0];
+                isFirstClick = false;
+                shownSpecies.add(0);
+            } else {
+                let availableIndices = [];
+                for (let i = 0; i < species.length; i++) {
+                    if (!shownSpecies.has(i)) {
+                        availableIndices.push(i);
+                    }
+                }
+                
+                if (availableIndices.length === 0) {
+                    shownSpecies.clear();
+                    availableIndices = Array.from({length: species.length}, (_, i) => i);
+                }
+                
+                const randomIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+                selected = species[randomIndex];
+                shownSpecies.add(randomIndex);
+            }
+            
+            document.getElementById('category').textContent = selected.category;
+            document.getElementById('speciesName').textContent = selected.scientific;
+            document.getElementById('commonName').textContent = selected.common;
+            document.getElementById('factText').textContent = selected.fact;
+            document.getElementById('funFact').style.display = 'block';
+            
+            document.getElementById('assembly').textContent = selected.accession;
+            document.getElementById('genomeSize').textContent = selected.genomeSize + ' Mb';
+            document.getElementById('n50').textContent = selected.n50 + ' Mb';
+            document.getElementById('technology').textContent = selected.technology;
+            document.getElementById('genomeStats').style.display = 'grid';
+            
+            const badge = document.getElementById('specialBadge');
+            if (selected.special) {
+                badge.textContent = selected.special;
+                badge.className = 'special-badge';
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+            
+            const phylogenyCard = document.getElementById('phylogenyCard');
+            const phylogenyTree = document.getElementById('phylogenyTree');
+            if (phylogenyTrees[selected.phylum]) {
+                phylogenyTree.innerHTML = phylogenyTrees[selected.phylum];
+                phylogenyCard.style.display = 'block';
+            } else {
+                phylogenyCard.style.display = 'none';
+            }
+            
+            const ncbiLink = document.getElementById('ncbiLink');
+            ncbiLink.href = `https://www.ncbi.nlm.nih.gov/datasets/genome/${selected.accession}/`;
+            ncbiLink.style.display = 'block';
+            
+            counter++;
+            document.getElementById('counter').textContent = counter;
+            
+            const card = document.getElementById('speciesCard');
+            card.style.animation = 'none';
+            setTimeout(() => {
+                card.style.animation = 'slideIn 0.5s ease';
+            }, 10);
+        }
+    </script>
+</body>
+</html>
