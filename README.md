@@ -12,9 +12,12 @@ Click a button and explore a random species with sequenced genomes. Each species
 The first species is *Daphnia pulex* (the organism I did my PhD on)
 
 ## Features
-- 30 curated species including model organisms, invasive species, and some weird/wonderful ones
+- 40 curated species including model organisms, invasive species, bats, ancient genomes, hominins, and some weird/wonderful ones
 - Assembly data verified against NCBI records
 - Phylogeny visualization at the phylum level
+- Toggle between curated species list and NCBI search mode
+- Direct search of NCBI genome database by organism name
+- Links to SRA data for each species
 - Responsive design with animations
 
 ## Live Demo
@@ -27,7 +30,7 @@ I wanted to learn basic web development and thought a genome explorer would be a
 Just plain HTML, CSS, and JavaScript - keeping it simple for my first project.
 
 ## Species included
-Humans, fruit flies, water fleas, tardigrades, spotted lanternflies, barnacles, octopuses, and more!
+Humans, fruit flies, water fleas, tardigrades, spotted lanternflies, barnacles, octopuses, bats (Black Flying Fox, Big Brown Bat, Pale Spear-nosed Bat), ancient genomes (Neanderthal, Denisovan, Woolly Mammoth, Cave Bear), other hominins (Bonobo, Gorilla, Orangutan), and more!
 
 ---
 Built with help from Claude and various HTML websites. Any feedback welcome!
