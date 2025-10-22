@@ -272,6 +272,87 @@
             margin-top: 5px;
         }
 
+        .search-section {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 1em;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: #667eea;
+        }
+
+        .search-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1em;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .search-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .search-button:active {
+            transform: translateY(0);
+        }
+
+        .divider {
+            text-align: center;
+            color: #cbd5e0;
+            margin: 20px 0;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .sra-link {
+            display: inline-block;
+            margin-top: 10px;
+            margin-left: 10px;
+            color: #f5576c;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95em;
+            transition: color 0.2s;
+        }
+
+        .sra-link:hover {
+            color: #d63447;
+            text-decoration: underline;
+        }
+
         @media (max-width: 768px) {
             .main-content {
                 grid-template-columns: 1fr;
@@ -280,6 +361,14 @@
             .species-name {
                 font-size: 1.4em;
             }
+
+            .search-container {
+                flex-direction: column;
+            }
+
+            .search-button {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -287,6 +376,16 @@
     <div class="container">
         <h1>🧬 Genome Explorer</h1>
         <p class="subtitle">Discover fascinating species with sequenced genomes</p>
+        
+        <div class="search-section">
+            <div class="search-title">🔍 Search NCBI Genome Database</div>
+            <div class="search-container">
+                <input type="text" id="searchInput" class="search-input" placeholder="Enter organism name (e.g., 'Drosophila melanogaster')...">
+                <button class="search-button" onclick="searchNCBI()">Search NCBI</button>
+            </div>
+        </div>
+
+        <div class="divider">OR</div>
         
         <div class="main-content">
             <div class="species-card" id="speciesCard">
@@ -324,6 +423,9 @@
                 <a href="#" id="ncbiLink" class="ncbi-link" style="display: none;" target="_blank">
                     View Genome on NCBI →
                 </a>
+                <a href="#" id="sraLink" class="sra-link" style="display: none;" target="_blank">
+                    🧬 View SRA Data →
+                </a>
             </div>
 
             <div class="phylogeny-card" id="phylogenyCard" style="display: none;">
@@ -346,6 +448,22 @@
         let counter = 0;
         let isFirstClick = true;
         let shownSpecies = new Set();
+
+        function searchNCBI() {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            if (searchTerm) {
+                const searchUrl = `https://www.ncbi.nlm.nih.gov/datasets/genome/?search=${encodeURIComponent(searchTerm)}`;
+                window.open(searchUrl, '_blank');
+            } else {
+                alert('Please enter an organism name to search');
+            }
+        }
+
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchNCBI();
+            }
+        });
 
         const species = [
             {
@@ -925,6 +1043,10 @@
             const ncbiLink = document.getElementById('ncbiLink');
             ncbiLink.href = `https://www.ncbi.nlm.nih.gov/datasets/genome/${selected.accession}/`;
             ncbiLink.style.display = 'block';
+            
+            const sraLink = document.getElementById('sraLink');
+            sraLink.href = `https://www.ncbi.nlm.nih.gov/sra/?term=${encodeURIComponent(selected.scientific)}`;
+            sraLink.style.display = 'inline-block';
             
             counter++;
             document.getElementById('counter').textContent = counter;
