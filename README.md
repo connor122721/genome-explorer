@@ -17,21 +17,20 @@ The first species is *Daphnia pulex* (the organism I did my PhD on)
 - Phylogeny visualization at the phylum level
 - Toggle between curated species list and NCBI search mode
 - Direct search of NCBI genome database by organism name
-- Links to SRA data for each species
-- Responsive design with animations
+- Links to the SRA data for each currated species
 
 ## Live Demo
 [View the app here](https://connor122721.github.io/genome-explorer/)
 
 ## Why I built this
-I wanted to learn basic web development and thought a genome explorer would be a fun way to combine coding with my research interests. Plus, I've always wanted to highlight how many cool organisms have sequenced genomes now!
+I wanted to learn basic web development and thought a genome explorer would be a fun way to combine coding with my research interests. Plus, I've always wanted to highlight how many cool organisms have sequenced genomes now...
 
 ## Technologies
-Just plain HTML, CSS, and JavaScript - keeping it simple for my first project.
+HTML, CSS, and JavaScript.
 
 ## Species included
 Humans, fruit flies, water fleas, tardigrades, spotted lanternflies, barnacles, octopuses, bats (Black Flying Fox, Big Brown Bat, Pale Spear-nosed Bat), ancient genomes (Neanderthal, Denisovan, Woolly Mammoth, Cave Bear), other hominins (Bonobo, Gorilla, Orangutan), and more!
 
 ---
-Built with help from Claude and various HTML websites. Any feedback welcome!
+Built with help from Claude/copilot and various HTML websites.
 Email: connor.murray.phd@gmail.com
