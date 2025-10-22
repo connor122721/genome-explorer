@@ -39,13 +39,13 @@
         }
 
         .container {
-            background: #c9b29a;
+            background: #e8dcc8;
             border-radius: 20px;
             padding: 40px;
             max-width: 1000px;
             width: 100%;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            animation: fadeIn 0.5s ease;
+            animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         @keyframes fadeIn {
@@ -78,19 +78,19 @@
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             border-radius: 15px;
             padding: 30px;
-            animation: slideIn 0.5s ease;
+            animation: slideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         @keyframes slideIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
         .phylogeny-card {
             background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
             border-radius: 15px;
             padding: 20px;
-            animation: slideIn 0.5s ease;
+            animation: slideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
         }
@@ -237,7 +237,7 @@
             border-radius: 50px;
             cursor: pointer;
             width: 100%;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-weight: 600;
         }
 
@@ -250,6 +250,11 @@
             transform: translateY(0);
         }
 
+        button:focus {
+            outline: 3px solid rgba(102, 126, 234, 0.5);
+            outline-offset: 2px;
+        }
+
         .ncbi-link {
             display: block;
             text-align: center;
@@ -257,12 +262,19 @@
             color: #667eea;
             text-decoration: none;
             font-weight: 600;
-            transition: color 0.2s;
+            transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .ncbi-link:hover {
             color: #764ba2;
             text-decoration: underline;
+            transform: translateX(5px);
+        }
+
+        .ncbi-link:focus {
+            outline: 2px solid #667eea;
+            outline-offset: 4px;
+            border-radius: 4px;
         }
 
         .stats {
@@ -295,14 +307,27 @@
             background: white;
             border-radius: 15px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .search-section:hover {
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         }
 
         .search-title {
             font-size: 1.1em;
             font-weight: 600;
             color: #667eea;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             text-align: center;
+        }
+
+        .search-hint {
+            font-size: 0.85em;
+            color: #718096;
+            text-align: center;
+            margin-bottom: 10px;
+            font-style: italic;
         }
 
         .search-container {
@@ -316,12 +341,13 @@
             border: 2px solid #e2e8f0;
             border-radius: 25px;
             font-size: 1em;
-            transition: border-color 0.2s;
+            transition: border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             outline: none;
         }
 
         .search-input:focus {
             border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
         .search-button {
@@ -332,7 +358,7 @@
             font-size: 1em;
             border-radius: 25px;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-weight: 600;
             white-space: nowrap;
         }
@@ -344,6 +370,11 @@
 
         .search-button:active {
             transform: translateY(0);
+        }
+
+        .search-button:focus {
+            outline: 3px solid rgba(102, 126, 234, 0.5);
+            outline-offset: 2px;
         }
 
         .divider {
@@ -366,6 +397,7 @@
             font-size: 1em;
             font-weight: 600;
             color: #4a5568;
+            transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .mode-label.active {
@@ -379,7 +411,7 @@
             background-color: #cbd5e0;
             border-radius: 15px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .toggle-switch.active {
@@ -394,7 +426,7 @@
             height: 24px;
             background-color: white;
             border-radius: 50%;
-            transition: transform 0.3s;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
@@ -410,12 +442,19 @@
             text-decoration: none;
             font-weight: 600;
             font-size: 0.95em;
-            transition: color 0.2s;
+            transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .sra-link:hover {
             color: #d63447;
             text-decoration: underline;
+            transform: scale(1.05);
+        }
+
+        .sra-link:focus {
+            outline: 2px solid #f5576c;
+            outline-offset: 4px;
+            border-radius: 4px;
         }
 
         @media (max-width: 768px) {
@@ -452,9 +491,15 @@
 
         <div class="search-section" id="searchSection">
             <div class="search-title">🔍 Search NCBI Genome Database</div>
+            <div class="search-hint">Search for genome assemblies or sequencing data for any organism</div>
             <div class="search-container">
                 <input type="text" id="searchInput" class="search-input" placeholder="Enter organism name or genus (e.g., 'Drosophila' or 'Drosophila melanogaster')...">
                 <button class="search-button" onclick="searchNCBI()">Search NCBI</button>
+            </div>
+            <div style="text-align: center; margin-top: 15px;">
+                <button class="search-button" onclick="searchSRA()" style="width: auto; display: inline-block; background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);">
+                    🧬 Search SRA Data
+                </button>
             </div>
         </div>
         
@@ -572,6 +617,17 @@
                 window.open(searchUrl, '_blank');
             } else {
                 alert('Please enter an organism name to search');
+            }
+        }
+
+        function searchSRA() {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            if (searchTerm) {
+                // Search SRA database for the organism
+                const searchUrl = `https://www.ncbi.nlm.nih.gov/sra/?term=${encodeURIComponent(searchTerm)}[Organism]`;
+                window.open(searchUrl, '_blank');
+            } else {
+                alert('Please enter an organism name to search SRA');
             }
         }
 
@@ -1313,7 +1369,7 @@
             const card = document.getElementById('speciesCard');
             card.style.animation = 'none';
             setTimeout(() => {
-                card.style.animation = 'slideIn 0.5s ease';
+                card.style.animation = 'slideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
             }, 10);
         }
     </script>
