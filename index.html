@@ -337,6 +337,54 @@
             font-weight: 600;
         }
 
+        .mode-toggle-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+
+        .mode-label {
+            font-size: 1em;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .mode-label.active {
+            color: #667eea;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background-color: #cbd5e0;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .toggle-switch.active {
+            background-color: #667eea;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(30px);
+        }
+
         .sra-link {
             display: inline-block;
             margin-top: 10px;
@@ -377,17 +425,23 @@
         <h1>🧬 Genome Explorer</h1>
         <p class="subtitle">Discover fascinating species with sequenced genomes</p>
         
-        <div class="search-section">
+        <div class="mode-toggle-container">
+            <span class="mode-label" id="curatedLabel">Curated List</span>
+            <div class="toggle-switch" id="modeToggle" onclick="toggleMode()">
+                <div class="toggle-slider"></div>
+            </div>
+            <span class="mode-label active" id="searchLabel">Search NCBI</span>
+        </div>
+
+        <div class="search-section" id="searchSection">
             <div class="search-title">🔍 Search NCBI Genome Database</div>
             <div class="search-container">
                 <input type="text" id="searchInput" class="search-input" placeholder="Enter organism name (e.g., 'Drosophila melanogaster')...">
                 <button class="search-button" onclick="searchNCBI()">Search NCBI</button>
             </div>
         </div>
-
-        <div class="divider">OR</div>
         
-        <div class="main-content">
+        <div class="main-content" id="curatedSection" style="display: none;">
             <div class="species-card" id="speciesCard">
                 <div class="center-badges">
                     <span class="category" id="category"></span>
@@ -423,9 +477,14 @@
                 <a href="#" id="ncbiLink" class="ncbi-link" style="display: none;" target="_blank">
                     View Genome on NCBI →
                 </a>
-                <a href="#" id="sraLink" class="sra-link" style="display: none;" target="_blank">
-                    🧬 View SRA Data →
-                </a>
+                <div id="sraInfo" style="display: none; margin-top: 10px; text-align: center;">
+                    <a href="#" id="sraLink" class="sra-link" style="display: inline-block; margin: 0;" target="_blank">
+                        🧬 View SRA Data
+                    </a>
+                    <span id="sraCount" style="display: none; color: #4a5568; font-size: 0.9em; margin-left: 10px;">
+                        (<span id="sraCountValue">0</span> entries)
+                    </span>
+                </div>
             </div>
 
             <div class="phylogeny-card" id="phylogenyCard" style="display: none;">
@@ -434,9 +493,9 @@
             </div>
         </div>
 
-        <button onclick="generateRandomSpecies()">Explore Random Species</button>
+        <button id="exploreButton" onclick="generateRandomSpecies()" style="display: none;">Explore Random Species</button>
 
-        <div class="stats">
+        <div class="stats" id="statsSection" style="display: none;">
             <div class="stat">
                 <div class="stat-value-counter" id="counter">0</div>
                 <div class="stat-label-counter">Species Explored</div>
@@ -448,11 +507,50 @@
         let counter = 0;
         let isFirstClick = true;
         let shownSpecies = new Set();
+        let currentMode = 'search'; // 'search' or 'curated'
+
+        function toggleMode() {
+            const toggle = document.getElementById('modeToggle');
+            const searchSection = document.getElementById('searchSection');
+            const curatedSection = document.getElementById('curatedSection');
+            const exploreButton = document.getElementById('exploreButton');
+            const statsSection = document.getElementById('statsSection');
+            const curatedLabel = document.getElementById('curatedLabel');
+            const searchLabel = document.getElementById('searchLabel');
+            
+            if (currentMode === 'search') {
+                // Switch to curated mode
+                currentMode = 'curated';
+                toggle.classList.remove('active');
+                searchSection.style.display = 'none';
+                curatedSection.style.display = 'grid';
+                exploreButton.style.display = 'block';
+                statsSection.style.display = 'flex';
+                curatedLabel.classList.add('active');
+                searchLabel.classList.remove('active');
+            } else {
+                // Switch to search mode
+                currentMode = 'search';
+                toggle.classList.add('active');
+                searchSection.style.display = 'block';
+                curatedSection.style.display = 'none';
+                exploreButton.style.display = 'none';
+                statsSection.style.display = 'none';
+                curatedLabel.classList.remove('active');
+                searchLabel.classList.add('active');
+            }
+        }
+
+        // Initialize toggle state
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggle = document.getElementById('modeToggle');
+            toggle.classList.add('active'); // Start in search mode
+        });
 
         function searchNCBI() {
             const searchTerm = document.getElementById('searchInput').value.trim();
             if (searchTerm) {
-                const searchUrl = `https://www.ncbi.nlm.nih.gov/datasets/genome/?search=${encodeURIComponent(searchTerm)}`;
+                const searchUrl = `https://www.ncbi.nlm.nih.gov/datasets/genome/?taxon=${encodeURIComponent(searchTerm)}`;
                 window.open(searchUrl, '_blank');
             } else {
                 alert('Please enter an organism name to search');
@@ -464,6 +562,19 @@
                 searchNCBI();
             }
         });
+
+        async function fetchSRACount(scientificName) {
+            try {
+                // Use NCBI ESearch API to get count
+                const esearchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=sra&term=${encodeURIComponent(scientificName)}[Organism]&retmode=json&rettype=count`;
+                const response = await fetch(esearchUrl);
+                const data = await response.json();
+                return parseInt(data.esearchresult.count) || 0;
+            } catch (error) {
+                console.error('Error fetching SRA count:', error);
+                return null;
+            }
+        }
 
         const species = [
             {
@@ -799,6 +910,120 @@
                 genomeSize: 496.0,
                 n50: 1.68,
                 technology: "Sanger"
+            },
+            {
+                scientific: "Pteropus alecto",
+                common: "Black Flying Fox",
+                category: "Mammal",
+                phylum: "Chordata",
+                fact: "Flying foxes are large fruit bats that can have wingspans over 5 feet! Their genomes reveal unique adaptations in immune genes, allowing them to harbor viruses without getting sick. They're crucial for forest regeneration through seed dispersal.",
+                accession: "GCF_000325575.1",
+                genomeSize: 1970.0,
+                n50: 4.59,
+                technology: "Illumina"
+            },
+            {
+                scientific: "Eptesicus fuscus",
+                common: "Big Brown Bat",
+                category: "Mammal",
+                phylum: "Chordata",
+                fact: "This common North American bat uses echolocation to hunt insects in complete darkness. Their genome reveals adaptations for powered flight and unique DNA repair mechanisms that may contribute to their long lifespans (over 19 years).",
+                accession: "GCF_000308155.1",
+                genomeSize: 1972.0,
+                n50: 3.23,
+                technology: "Illumina"
+            },
+            {
+                scientific: "Phyllostomus discolor",
+                common: "Pale Spear-nosed Bat",
+                category: "Mammal",
+                phylum: "Chordata",
+                fact: "These bats have an incredibly varied diet including fruit, nectar, insects, and even small vertebrates. Their genome reveals expansions in olfactory receptor genes, giving them an exceptional sense of smell for a bat.",
+                accession: "GCF_004126475.1",
+                genomeSize: 2042.0,
+                n50: 33.7,
+                technology: "PacBio, Illumina"
+            },
+            {
+                scientific: "Homo neanderthalensis",
+                common: "Neanderthal",
+                category: "Ancient Hominin",
+                phylum: "Chordata",
+                fact: "Neanderthals went extinct about 40,000 years ago, but their DNA lives on! Most non-African humans carry 1-4% Neanderthal DNA. Their genome was reconstructed from ancient bones and reveals interbreeding with modern humans.",
+                accession: "GCF_000004215.1",
+                genomeSize: 3200.0,
+                n50: 0.15,
+                technology: "454, Illumina",
+                special: "Ancient Genome! 🦴"
+            },
+            {
+                scientific: "Homo sapiens altai",
+                common: "Denisovan",
+                category: "Ancient Hominin",
+                phylum: "Chordata",
+                fact: "Denisovans are a mysterious extinct human species known mainly from DNA! They interbred with ancestors of modern Melanesians and Tibetans. Tibetans inherited a Denisovan gene variant that helps them survive at high altitudes.",
+                accession: "GCA_000186385.1",
+                genomeSize: 3000.0,
+                n50: 0.02,
+                technology: "Illumina",
+                special: "Ancient Genome! 🦴"
+            },
+            {
+                scientific: "Pan paniscus",
+                common: "Bonobo",
+                category: "Mammal",
+                phylum: "Chordata",
+                fact: "Bonobos are one of our closest living relatives along with chimpanzees. They're known for their peaceful, matriarchal societies. Comparing bonobo, chimp, and human genomes helps us understand the genetic basis of social behavior.",
+                accession: "GCF_000258655.2",
+                genomeSize: 3286.6,
+                n50: 6.42,
+                technology: "Sanger, Illumina"
+            },
+            {
+                scientific: "Gorilla gorilla",
+                common: "Western Gorilla",
+                category: "Mammal",
+                phylum: "Chordata",
+                fact: "Gorillas are the largest living primates. Their genome reveals they share about 98% of their DNA with humans. Interestingly, some gorilla genes are more similar to humans than chimp genes are, showing complex evolutionary relationships.",
+                accession: "GCF_008122165.1",
+                genomeSize: 3063.0,
+                n50: 67.0,
+                technology: "PacBio, Illumina"
+            },
+            {
+                scientific: "Pongo abelii",
+                common: "Sumatran Orangutan",
+                category: "Mammal",
+                phylum: "Chordata",
+                fact: "Orangutans are the most arboreal of the great apes, spending most of their lives in trees. Their genome shows unique evolutionary changes related to metabolism and brain development. They're also one of our closest relatives, sharing ~97% of our DNA.",
+                accession: "GCF_002880775.1",
+                genomeSize: 3093.0,
+                n50: 16.5,
+                technology: "PacBio, Illumina"
+            },
+            {
+                scientific: "Mammuthus primigenius",
+                common: "Woolly Mammoth",
+                category: "Ancient Mammal",
+                phylum: "Chordata",
+                fact: "Woolly mammoths went extinct about 4,000 years ago, but their DNA preserved in permafrost has been sequenced! Their genome reveals adaptations to cold climates including genes for small ears, thick fur, and special hemoglobin for oxygen transport in the cold.",
+                accession: "GCA_000695525.1",
+                genomeSize: 3300.0,
+                n50: 0.09,
+                technology: "Illumina",
+                special: "Ancient Genome! 🦴"
+            },
+            {
+                scientific: "Ursus spelaeus",
+                common: "Cave Bear",
+                category: "Ancient Mammal",
+                phylum: "Chordata",
+                fact: "Cave bears went extinct about 24,000 years ago. Analysis of their ancient DNA shows they were mostly vegetarian despite being bears, and they may have gone extinct due to climate change and competition with humans.",
+                accession: "GCA_001339855.1",
+                genomeSize: 2400.0,
+                n50: 0.05,
+                technology: "Illumina",
+                special: "Ancient Genome! 🦴"
             }
         ];
 
@@ -1044,9 +1269,25 @@
             ncbiLink.href = `https://www.ncbi.nlm.nih.gov/datasets/genome/${selected.accession}/`;
             ncbiLink.style.display = 'block';
             
+            const sraInfo = document.getElementById('sraInfo');
             const sraLink = document.getElementById('sraLink');
+            const sraCount = document.getElementById('sraCount');
+            const sraCountValue = document.getElementById('sraCountValue');
+            
             sraLink.href = `https://www.ncbi.nlm.nih.gov/sra/?term=${encodeURIComponent(selected.scientific)}`;
-            sraLink.style.display = 'inline-block';
+            sraInfo.style.display = 'block';
+            
+            // Fetch SRA count
+            fetchSRACount(selected.scientific).then(count => {
+                if (count !== null && count > 0) {
+                    sraCountValue.textContent = count.toLocaleString();
+                    sraCount.style.display = 'inline';
+                } else {
+                    sraCount.style.display = 'none';
+                }
+            }).catch(() => {
+                sraCount.style.display = 'none';
+            });
             
             counter++;
             document.getElementById('counter').textContent = counter;
